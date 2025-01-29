@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(voxel-engine)
 
 # Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Add source files
@@ -67,7 +67,7 @@ add_executable(voxel-engine ${SOURCES})
 target_include_directories(voxel-engine PRIVATE libs/glad/include)
 target_include_directories(voxel-engine PRIVATE ${IMGUI_PATH})
 target_include_directories(voxel-engine PRIVATE ${IMGUI_PATH}/backends)
-target_link_libraries(voxel-engine glad glfw glm::glm${CMAKE_DL_LIBS} "imgui")
+target_link_libraries(voxel-engine glad glfw glm::glm ${CMAKE_DL_LIBS} "imgui")
 
 # target_link_libraries(voxel-engine PRIVATE glm::glm)
 
