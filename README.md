@@ -3,16 +3,19 @@
 ![preview](https://github.com/user-attachments/assets/f4f6eb2c-5e47-4f15-8a8e-db896befeffd)
 
 ## Overview
+
 ![overview](assets/overview.png)
 
 ### Instructions
 
 Make sure to clone this repository recursively!
+
 ```
 git clone https://github.com/compsci-adl/voxel-engine --recursive
 ```
 
 If you have cloned it non-recursively:
+
 ```
 git submodule update --init
 ```
@@ -29,6 +32,29 @@ git submodule update --init
 
 ```bat
 .\build.bat
+```
+
+## Troubleshooting
+
+#### Missing libraries error and ```libs/``` content missing:
+
+Either increase Git's maximum download size, then try again.
+
+```
+git config --global http.postBuffer 104857600
+git submodule update --init
+```
+
+Or manually clone libraries into their corresponding ``libs/`` folder.
+
+
+#### Missing libraries Ubuntu
+
+In Ubuntu, install all the required packages with:
+
+``` 
+sudo apt update
+sudo apt install libwayland-dev libxkbcommon-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev mesa-common-dev libgl1-mesa-dev
 ```
 
 ## Contributing
