@@ -38,10 +38,11 @@ git submodule update --init
 
 #### Missing libraries error and ```libs/``` content missing:
 
-Either increase Git's maximum download size
+Either increase Git's maximum download size, then try again.
 
 ```
 git config --global http.postBuffer 104857600
+git submodule update --init
 ```
 
 Or manually clone libraries into their corresponding ``libs/`` folder.
