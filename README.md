@@ -36,7 +36,7 @@ git submodule update --init
 
 ## Troubleshooting
 
-##### Missing libraries error and ```libs/``` content missing:
+#### Missing libraries error and ```libs/``` content missing:
 
 Either increase Git's maximum download size
 
@@ -47,7 +47,7 @@ git config --global http.postBuffer 104857600
 Or manually clone libraries into their corresponding ``libs/`` folder.
 
 
-##### Missing libraries Ubuntu
+#### Missing libraries Ubuntu
 
 In Ubuntu, install all the required packages with:
 
