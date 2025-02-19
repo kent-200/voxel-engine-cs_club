@@ -40,7 +40,9 @@ git submodule update --init
 
 Either increase Git's maximum download size
 
-```git config --global http.postBuffer 104857600```
+```
+git config --global http.postBuffer 104857600
+```
 
 Or manually clone libraries into their corresponding ``libs/`` folder.
 
