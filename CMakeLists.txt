@@ -3,7 +3,7 @@ project(voxel-engine)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED OFF)    # changed to off
 
 # Add source files
 file(GLOB SOURCES "src/main.cpp")
