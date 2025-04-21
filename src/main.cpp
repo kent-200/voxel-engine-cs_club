@@ -17,6 +17,8 @@
 #include <iostream>
 #include "utils.h"
 
+#include "texture.h"
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void imgui_mouse_callback(GLFWwindow *window, double xpos, double ypos);
@@ -46,36 +48,6 @@ std::vector<float> memHistory;
 
 
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "../libs/stb_image.h"
-
-
-// load textures 
-void loadTexture(std::string path, unsigned int &texture) {
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    
-    // Set the texture wrapping parameters, chose pixelated look
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    // repeated setting - want to stretch on both x any y axis
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-
-    // load and generate the texture
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load(path.c_str(), &width, &height,
-                                    &nrChannels, 0); // stbi_image_free(data);
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-}
 
 
 
@@ -155,14 +127,19 @@ int main() {
     // chunk.setup();
 
     // load textures
-    unsigned int texture1;
-    loadTexture("src/textures/terrain.png", texture1);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-
+    // -----------------------------
+    Texture blockTextures("src/textures/terrain.png", 16, 16);
+    blockTextures.bindTexture(0);
     ourShader->use();
-    ourShader->setInt("texture1", 0);
+    ourShader->setInt("texture1", 0);   // set texture1 in shader to binded texture #0
+    ourShader->setFloat("texWidth", (1.0f / (float) blockTextures.atlasCols));
+    ourShader->setFloat("texHeight", (1.0f / (float) blockTextures.atlasRows));
+
+
+    // optional: back face culling
+    // glEnable(GL_CULL_FACE);   // Enable backface culling
+	// glCullFace(GL_BACK);      // Cull back faces
+	// glFrontFace(GL_CCW);   
 
 
     char fpsStr[32] = "FPS: 0";

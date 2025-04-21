@@ -70,7 +70,7 @@ struct Chunk {
 
 
     // change to use x and y coordinates as ints
-    static inline int packVertex(int x, int y, int z, int normal, int texX, int texY) {
+    inline int packVertex(int x, int y, int z, int normal, int texX, int texY) {
         int offset = 16; // Offset to handle negative values
         return ((x + offset) & 0x3F) |              // 6 bits for x
                (((y + offset) & 0x3F) << 6) |       // 6 bits for y
@@ -81,9 +81,9 @@ struct Chunk {
     }
 
     // update just the texture coordinates so can maintain the same vertex
-    static inline int updateTexCoords(int packedVertex, int texX, int texY) {
+    inline int updateTexCoords(int packedVertex, int texX, int texY) {
         // Clear bits 21–26 (texX and texY)
-        int cleared = packedVertex & ~(0x7 << 21) & ~(0x7 << 24);
+        int cleared = packedVertex & ~(0xF << 21) & ~(0xF << 25);
     
         // Set new texX and texY
         cleared |= (texX & 0xF) << 21;
@@ -192,7 +192,8 @@ void Chunk::initialize() {
                 // NOTE: there seems to be a "pattern" in some chunks - is the same seed be initted across threads?
                 // seems like it does: https://en.cppreference.com/w/cpp/numeric/random/rand
                 blocks[index].isActive = (std::rand() % 2 == 0) ? false : true;
-                blocks[index].blockType = (std::rand() % 2 == 0) ? BlockType::Grass : BlockType::Sand;
+                // make randint 1-6
+                blocks[index].blockType = BlockType((std::rand() % 6) + 1);
                 // blocks[index].isActive = true;
             }
         }

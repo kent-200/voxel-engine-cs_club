@@ -1,21 +1,26 @@
 #version 330 core
 layout (location = 0) in int vertexPosition;
 
-out vec2 TexCoord;
+out vec2 texCoord;
 out vec3 ourColor;
 flat out int _useInColor;
 
+// colour 
 uniform vec3 inColor;
 uniform bool useInColor;
+
+// chunk position and 3d
 uniform vec3 worldPos;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-const vec3 colors[3] = vec3[](vec3(0.0, 0.0, 0.0), vec3(0.0, 0.5, 0.0), vec3(0.5, 0.5, 0.0));
+// texture size 
+uniform float texWidth;
+uniform float texHeight;
 
-const float TX_WIDTH = 1.0f/16.0f;
-const float TX_HEIGHT = 1.0f/16.0f;
+// const vec3 colors[3] = vec3[](vec3(0.0, 0.0, 0.0), vec3(0.0, 0.5, 0.0), vec3(0.5, 0.5, 0.0));
+
 
 void main()
 {
@@ -28,17 +33,17 @@ void main()
 
     // int position = (((vertexPosition >> 21) & 0x3F)); // 6 bits for texture
 
-    // convert to texture coordinate - expand to 4 bits each for 16x16 range
-    int texX = (vertexPosition >> 21) & 0xF; // bits 21–24
-    int texY = (vertexPosition >> 25) & 0xF; // bits 25–28
-    float tex_x = float(texX) * TX_WIDTH;
-    float tex_y = float(texY) * TX_HEIGHT;
+    // decode texture coordinate - 4 bits each for 16x16 range
+    float texX = (vertexPosition >> 21) & 0xF; // bits 21–24
+    float texY = (vertexPosition >> 25) & 0xF; // bits 25–28
+    texX = texX * texWidth;
+    texY = texY * texHeight;
 
 
     // 32 bits
-    //[start].ttttttttfffzzzzzzyyyyyyxxxxxx[end]
+    //        texture coord(4) normal(3) block coord(6) 
+    //[start]...yyyyxxxxfffzzzzzzyyyyyyxxxxxx[end]
 
-    // expand t to 8 bit later, 256 options to match file
 
     // No normal or type used in this example for movement
     vec3 decodedPos = vec3(x, y, z);
@@ -49,9 +54,9 @@ void main()
 
     if(_useInColor == 1){
         ourColor = inColor;
-        TexCoord = vec2(0, 0);
+        texCoord = vec2(0, 0);
     } else {
         ourColor = vec3(1.0, 1.0, 1.0);
-        TexCoord = vec2(tex_x, tex_y);
+        texCoord = vec2(texX, texY);
     }
 }
