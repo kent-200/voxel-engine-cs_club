@@ -184,6 +184,8 @@ void Chunk::render(Camera camera) { DrawChunkMesh(camera, mesh, material, chunkP
 //     return bBox;
 // }
 
+// TODO: use a terrain generator 
+
 void Chunk::initialize() {
     for (int x = 0; x < CHUNK_SIZE; x++) {
         for (int y = 0; y < CHUNK_SIZE; y++) {
@@ -192,7 +194,7 @@ void Chunk::initialize() {
                 // NOTE: there seems to be a "pattern" in some chunks - is the same seed be initted across threads?
                 // seems like it does: https://en.cppreference.com/w/cpp/numeric/random/rand
                 blocks[index].isActive = (std::rand() % 2 == 0) ? false : true;
-                // make randint 1-6
+                // make randint 1-7
                 blocks[index].blockType = BlockType((std::rand() % 6) + 1);
                 // blocks[index].isActive = true;
             }
@@ -300,6 +302,12 @@ void Chunk::CreateCube(ChunkMesh *mesh, int blockX, int blockY, int blockZ,
 
 
     // ADD TRIANGLES INTO MESH
+    // prevent segfault if block does not exist
+    if(textureCoordMap.count(blockType) == 0) {
+        std::cerr << "Block type " << blockType << " not found in textureCoordMap." << std::endl;
+        exit(1);
+    }
+
     std::vector<std::pair<int, int>> textureCoords = textureCoordMap[blockType];
 
     glm::vec3 n1 = {0.0f, 0.0f, 1.0f};
