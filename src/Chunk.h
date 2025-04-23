@@ -69,25 +69,27 @@ struct Chunk {
     // }
 
 
-    // change to use x and y coordinates as ints
-    inline int packVertex(int x, int y, int z, int normal, int texX, int texY) {
+    // u/v represent texture coordinate / size
+    // normal is just face number, 0-5
+    inline int packVertex(int x, int y, int z, int normal, int u, int v) {
         int offset = 16; // Offset to handle negative values
         return ((x + offset) & 0x3F) |              // 6 bits for x
                (((y + offset) & 0x3F) << 6) |       // 6 bits for y
                (((z + offset) & 0x3F) << 12) |      // 6 bits for z
                ((normal & 0x7) << 18) |             // 3 bits for normal
-               ((texX & 0xF) << 21) |               // 4 bits for texX
-               ((texY & 0xF) << 25);                // 4 bits for texY
+               ((u & 0xF) << 21) |               // 4 bits for u (x)
+               ((v & 0xF) << 25);                // 4 bits for v (y)
     }
 
-    // update just the texture coordinates so can maintain the same vertex
-    inline int updateTexCoords(int packedVertex, int texX, int texY) {
-        // Clear bits 21–26 (texX and texY)
-        int cleared = packedVertex & ~(0xF << 21) & ~(0xF << 25);
+    // update just the texture coordinates while maintaining the same vertex 
+    inline int updateTexCoords(int packedVertex, int normal, int u, int v) {
+        // Clear bits 18–26 (normal, u/texX and v/texY)
+        int cleared = packedVertex & ~(0x7 << 18) & ~(0xF << 21) & ~(0xF << 25);
     
-        // Set new texX and texY
-        cleared |= (texX & 0xF) << 21;
-        cleared |= (texY & 0xF) << 25;
+        // Set new 
+        cleared |= (normal & 0x7) << 18;
+        cleared |= (u & 0xF) << 21;
+        cleared |= (v & 0xF) << 25;
     
         return cleared;
     }
@@ -309,14 +311,16 @@ void Chunk::CreateCube(ChunkMesh *mesh, int blockX, int blockY, int blockZ,
     }
 
     std::vector<std::pair<int, int>> textureCoords = textureCoordMap[blockType];
+    // front, back, left, right, top, bottom
 
-    glm::vec3 n1 = {0.0f, 0.0f, 1.0f};
+    glm::vec3 n1;
     // front face
     if (!lZPositive) {
-        p1 = updateTexCoords(p1, textureCoords[0].first, textureCoords[0].second + 1);
-        p2 = updateTexCoords(p2, textureCoords[0].first + 1, textureCoords[0].second + 1);
-        p3 = updateTexCoords(p3, textureCoords[0].first + 1, textureCoords[0].second);
-        p4 = updateTexCoords(p4, textureCoords[0].first, textureCoords[0].second);
+        n1 = {0.0f, 0.0f, 1.0f};
+        p1 = updateTexCoords(p1, 0, textureCoords[0].first, textureCoords[0].second + 1);
+        p2 = updateTexCoords(p2, 0, textureCoords[0].first + 1, textureCoords[0].second + 1);
+        p3 = updateTexCoords(p3, 0, textureCoords[0].first + 1, textureCoords[0].second);
+        p4 = updateTexCoords(p4, 0, textureCoords[0].first, textureCoords[0].second);
         
         AddCubeFace(mesh, p1, p2, p3, p4, vCount, iCount);
     }
@@ -324,50 +328,50 @@ void Chunk::CreateCube(ChunkMesh *mesh, int blockX, int blockY, int blockZ,
     // back face
     if (!lZNegative) {
         n1 = {0.0f, 0.0f, -1.0f};
-        p5 = updateTexCoords(p5, textureCoords[1].first, textureCoords[1].second + 1);
-        p6 = updateTexCoords(p6, textureCoords[1].first + 1, textureCoords[1].second + 1);
-        p7 = updateTexCoords(p7, textureCoords[1].first + 1, textureCoords[1].second);
-        p8 = updateTexCoords(p8, textureCoords[1].first, textureCoords[1].second);
+        p5 = updateTexCoords(p5, 1, textureCoords[1].first, textureCoords[1].second + 1);
+        p6 = updateTexCoords(p6, 1, textureCoords[1].first + 1, textureCoords[1].second + 1);
+        p7 = updateTexCoords(p7, 1, textureCoords[1].first + 1, textureCoords[1].second);
+        p8 = updateTexCoords(p8, 1, textureCoords[1].first, textureCoords[1].second);
         AddCubeFace(mesh, p5, p6, p7, p8, vCount, iCount);
     }
 
     // left face
     if (!lXPositive) {
         n1 = {1.0f, 0.0f, 0.0f};
-        p2 = updateTexCoords(p2, textureCoords[2].first, textureCoords[2].second + 1);
-        p5 = updateTexCoords(p5, textureCoords[2].first + 1, textureCoords[2].second + 1);
-        p8 = updateTexCoords(p8, textureCoords[2].first + 1, textureCoords[2].second);
-        p3 = updateTexCoords(p3, textureCoords[2].first, textureCoords[2].second);
+        p2 = updateTexCoords(p2, 2, textureCoords[2].first, textureCoords[2].second + 1);
+        p5 = updateTexCoords(p5, 2, textureCoords[2].first + 1, textureCoords[2].second + 1);
+        p8 = updateTexCoords(p8, 2, textureCoords[2].first + 1, textureCoords[2].second);
+        p3 = updateTexCoords(p3, 2, textureCoords[2].first, textureCoords[2].second);
         AddCubeFace(mesh, p2, p5, p8, p3, vCount, iCount);
     }
 
     // right face
     if (!lXNegative) {
         n1 = {-1.0f, 0.0f, 0.0f};
-        p6 = updateTexCoords(p6, textureCoords[3].first, textureCoords[3].second + 1);
-        p1 = updateTexCoords(p1, textureCoords[3].first + 1, textureCoords[3].second + 1);
-        p4 = updateTexCoords(p4, textureCoords[3].first + 1, textureCoords[3].second);
-        p7 = updateTexCoords(p7, textureCoords[3].first, textureCoords[3].second);
+        p6 = updateTexCoords(p6, 3, textureCoords[3].first, textureCoords[3].second + 1);
+        p1 = updateTexCoords(p1, 3, textureCoords[3].first + 1, textureCoords[3].second + 1);
+        p4 = updateTexCoords(p4, 3, textureCoords[3].first + 1, textureCoords[3].second);
+        p7 = updateTexCoords(p7, 3, textureCoords[3].first, textureCoords[3].second);
         AddCubeFace(mesh, p6, p1, p4, p7, vCount, iCount);
     }
 
     // top face
     if (!lYPositive) {
         n1 = {0.0f, 1.0f, 0.0f};
-        p4 = updateTexCoords(p4, textureCoords[4].first, textureCoords[4].second);
-        p3 = updateTexCoords(p3, textureCoords[4].first + 1, textureCoords[4].second);
-        p8 = updateTexCoords(p8, textureCoords[4].first + 1, textureCoords[4].second + 1);
-        p7 = updateTexCoords(p7, textureCoords[4].first, textureCoords[4].second + 1);
+        p4 = updateTexCoords(p4, 4, textureCoords[4].first, textureCoords[4].second);
+        p3 = updateTexCoords(p3, 4, textureCoords[4].first + 1, textureCoords[4].second);
+        p8 = updateTexCoords(p8, 4, textureCoords[4].first + 1, textureCoords[4].second + 1);
+        p7 = updateTexCoords(p7, 4, textureCoords[4].first, textureCoords[4].second + 1);
         AddCubeFace(mesh, p4, p3, p8, p7, vCount, iCount);
     }
 
     // bottom face
     if (!lYNegative) {
         n1 = {0.0f, -1.0f, 0.0f};
-        p6 = updateTexCoords(p6, textureCoords[5].first, textureCoords[5].second);
-        p5 = updateTexCoords(p5, textureCoords[5].first + 1, textureCoords[5].second);
-        p2 = updateTexCoords(p2, textureCoords[5].first + 1, textureCoords[5].second + 1);
-        p1 = updateTexCoords(p1, textureCoords[5].first, textureCoords[5].second + 1);
+        p6 = updateTexCoords(p6, 5, textureCoords[5].first, textureCoords[5].second);
+        p5 = updateTexCoords(p5, 5, textureCoords[5].first + 1, textureCoords[5].second);
+        p2 = updateTexCoords(p2, 5, textureCoords[5].first + 1, textureCoords[5].second + 1);
+        p1 = updateTexCoords(p1, 5, textureCoords[5].first, textureCoords[5].second + 1);
         AddCubeFace(mesh, p6, p5, p2, p1, vCount, iCount);
     }
 }

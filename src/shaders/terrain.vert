@@ -3,6 +3,7 @@ layout (location = 0) in int vertexPosition;
 
 out vec2 texCoord;
 out vec3 ourColor;
+out float brightness;       // constant all colours for now 
 flat out int _useInColor;
 
 // colour 
@@ -22,6 +23,17 @@ uniform float texHeight;
 // const vec3 colors[3] = vec3[](vec3(0.0, 0.0, 0.0), vec3(0.0, 0.5, 0.0), vec3(0.5, 0.5, 0.0));
 
 
+// fast shadow for depth - no lighting yet
+const float brightnessArr[6] = float[6](
+    0.86,  // front
+    0.86,  // back
+    0.80,   // left
+    0.80,  // right
+    1.00,  // top
+    0.60  // bottom
+);
+
+
 void main()
 {
     int offset = 16; // Offset to revert the signed range
@@ -30,6 +42,7 @@ void main()
     float x = ((vertexPosition & 0x3F) - offset);         // 6 bits for x
     float y = (((vertexPosition >> 6) & 0x3F) - offset);  // 6 bits for y
     float z = (((vertexPosition >> 12) & 0x3F) - offset); // 6 bits for z
+    int normalIndex = ((vertexPosition >> 18) & 0x7); // 3 bits for normal, assigned to face 1-6, see brightnessArr
 
     // int position = (((vertexPosition >> 21) & 0x3F)); // 6 bits for texture
 
@@ -42,7 +55,7 @@ void main()
 
     // 32 bits
     //        texture coord(4) normal(3) block coord(6) 
-    //[start]...yyyyxxxxfffzzzzzzyyyyyyxxxxxx[end]
+    //[start]...vvvvuuuufffzzzzzzyyyyyyxxxxxx[end]
 
 
     // No normal or type used in this example for movement
@@ -55,8 +68,10 @@ void main()
     if(_useInColor == 1){
         ourColor = inColor;
         texCoord = vec2(0, 0);
+        brightness = 1.0f; // default brightness
     } else {
         ourColor = vec3(1.0, 1.0, 1.0);
         texCoord = vec2(texX, texY);
+        brightness = brightnessArr[normalIndex]; 
     }
 }
