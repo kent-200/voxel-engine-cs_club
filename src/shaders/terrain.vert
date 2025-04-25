@@ -46,16 +46,15 @@ void main()
 
     // int position = (((vertexPosition >> 21) & 0x3F)); // 6 bits for texture
 
-    // decode texture coordinate - 4 bits each for 16x16 range
-    float texX = (vertexPosition >> 21) & 0xF; // bits 21–24
-    float texY = (vertexPosition >> 25) & 0xF; // bits 25–28
-    texX = texX * texWidth;
-    texY = texY * texHeight;
+    // decode texture coordinate - 5 bits each for 63x63 range
+    float u = (vertexPosition >> 21) & 0x1F; // bits 21–25
+    float v = (vertexPosition >> 26) & 0x1F; // bits 26–30
+    u = u * texWidth;
+    v = v * texHeight;
 
 
     // 32 bits
-    //        texture coord(4) normal(3) block coord(6) 
-    //[start]...vvvvuuuufffzzzzzzyyyyyyxxxxxx[end]
+    //[start].vvvvvuuuuufffzzzzzzyyyyyyxxxxxx[end]
 
 
     // No normal or type used in this example for movement
@@ -71,7 +70,7 @@ void main()
         brightness = 1.0f; // default brightness
     } else {
         ourColor = vec3(1.0, 1.0, 1.0);
-        texCoord = vec2(texX, texY);
+        texCoord = vec2(u, v);
         brightness = brightnessArr[normalIndex]; 
     }
 }

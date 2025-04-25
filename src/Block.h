@@ -19,6 +19,7 @@ enum BlockType {
 // create map of texture coordinates for each size and type
 // stores coordinates as x,y int, so top left 0, 0. to the right is 1, 0, below is 0, 1 and bottom right is 15, 15
 // input top left corner, will get 0,0 to 1,1
+// NOTE: Maximum textures in map is 63x63 icons due to 5 bit coordinates.
 // front, back, left, right, top, bottom
 std::unordered_map<int, std::vector<std::pair<int, int>>> textureCoordMap = {
     {BlockType::Grass, {{3, 0}, {3, 0}, {3, 0}, {3, 0}, {0, 0}, {2, 0}}},

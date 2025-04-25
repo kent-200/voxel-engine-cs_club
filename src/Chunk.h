@@ -71,25 +71,26 @@ struct Chunk {
 
     // u/v represent texture coordinate / size
     // normal is just face number, 0-5
+    // x, y, z are 0-63, SUPPORTS 63x63 TEXTURES, due to coordinate system
     inline int packVertex(int x, int y, int z, int normal, int u, int v) {
         int offset = 16; // Offset to handle negative values
         return ((x + offset) & 0x3F) |              // 6 bits for x
                (((y + offset) & 0x3F) << 6) |       // 6 bits for y
                (((z + offset) & 0x3F) << 12) |      // 6 bits for z
                ((normal & 0x7) << 18) |             // 3 bits for normal
-               ((u & 0xF) << 21) |               // 4 bits for u (x)
-               ((v & 0xF) << 25);                // 4 bits for v (y)
+               ((u & 0x1F) << 21) |               // 5 bits for u (x)
+               ((v & 0x1F) << 26);                // 5 bits for v (y)
     }
 
     // update just the texture coordinates while maintaining the same vertex 
     inline int updateTexCoords(int packedVertex, int normal, int u, int v) {
         // Clear bits 18–26 (normal, u/texX and v/texY)
-        int cleared = packedVertex & ~(0x7 << 18) & ~(0xF << 21) & ~(0xF << 25);
+        int cleared = packedVertex & ~(0x7 << 18) & ~(0x1F << 21) & ~(0x1F << 26);
     
         // Set new 
         cleared |= (normal & 0x7) << 18;
-        cleared |= (u & 0xF) << 21;
-        cleared |= (v & 0xF) << 25;
+        cleared |= (u & 0x1F) << 21;
+        cleared |= (v & 0x1F) << 26;
     
         return cleared;
     }
@@ -313,7 +314,7 @@ void Chunk::CreateCube(ChunkMesh *mesh, int blockX, int blockY, int blockZ,
     std::vector<std::pair<int, int>> textureCoords = textureCoordMap[blockType];
     // front, back, left, right, top, bottom
 
-    glm::vec3 n1;
+    glm::vec3 n1;       // for normal??, not used. 
     // front face
     if (!lZPositive) {
         n1 = {0.0f, 0.0f, 1.0f};
