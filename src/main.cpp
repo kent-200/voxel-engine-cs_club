@@ -17,6 +17,8 @@
 #include <iostream>
 #include "utils.h"
 
+#include "texture.h"
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void imgui_mouse_callback(GLFWwindow *window, double xpos, double ypos);
@@ -43,6 +45,11 @@ const int FPS_HISTORY_CAP = 5000;
 const int MEM_HISTORY_CAP = 5000;
 std::vector<float> fpsHistory;
 std::vector<float> memHistory;
+
+
+
+
+
 
 int main() {
     // glfw: initialize and configure
@@ -118,6 +125,22 @@ int main() {
     // Chunk chunk = Chunk(pos, ourShader);
     // chunk.load();
     // chunk.setup();
+
+    // load textures
+    // -----------------------------
+    Texture blockTextures("src/textures/terrain.png", 16, 16);
+    blockTextures.bindTexture(0);
+    ourShader->use();
+    ourShader->setInt("texture1", 0);   // set texture1 in shader to binded texture #0
+    ourShader->setFloat("texWidth", (1.0f / (float) blockTextures.atlasCols));
+    ourShader->setFloat("texHeight", (1.0f / (float) blockTextures.atlasRows));
+
+
+    // optional: back face culling
+    // glEnable(GL_CULL_FACE);   // Enable backface culling
+	// glCullFace(GL_BACK);      // Cull back faces
+	// glFrontFace(GL_CCW);   
+
 
     char fpsStr[32] = "FPS: 0";
     char memStr[32];

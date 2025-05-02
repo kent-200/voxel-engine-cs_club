@@ -61,12 +61,41 @@ struct Chunk {
     //     data |= (y & 63) << 6;
     //     data |= (x & 63);
     // }
-    static inline int packVertex(int x, int y, int z, int normal, int type) {
+    // static inline int packVertex(int x, int y, int z, int normal, int type) {
+    //     int offset = 16; // Offset to handle negative values
+    //     return ((x + offset) & 0x3F) | (((y + offset) & 0x3F) << 6) |
+    //            (((z + offset) & 0x3F) << 12) | ((normal & 0x7) << 18) |
+    //            ((type & 0x7FF) << 21);
+    // }
+
+
+    // u/v represent texture coordinate / size
+    // normal is just face number, 0-5
+    // x, y, z are 0-63, SUPPORTS 63x63 TEXTURES, due to coordinate system
+    inline int packVertex(int x, int y, int z, int normal, int u, int v) {
         int offset = 16; // Offset to handle negative values
-        return ((x + offset) & 0x3F) | (((y + offset) & 0x3F) << 6) |
-               (((z + offset) & 0x3F) << 12) | ((normal & 0x7) << 18) |
-               ((type & 0x7FF) << 21);
+        return ((x + offset) & 0x3F) |              // 6 bits for x
+               (((y + offset) & 0x3F) << 6) |       // 6 bits for y
+               (((z + offset) & 0x3F) << 12) |      // 6 bits for z
+               ((normal & 0x7) << 18) |             // 3 bits for normal
+               ((u & 0x1F) << 21) |               // 5 bits for u (x)
+               ((v & 0x1F) << 26);                // 5 bits for v (y)
     }
+
+    // update just the texture coordinates while maintaining the same vertex 
+    inline int updateTexCoords(int packedVertex, int normal, int u, int v) {
+        // Clear bits 18–26 (normal, u/texX and v/texY)
+        int cleared = packedVertex & ~(0x7 << 18) & ~(0x1F << 21) & ~(0x1F << 26);
+    
+        // Set new 
+        cleared |= (normal & 0x7) << 18;
+        cleared |= (u & 0x1F) << 21;
+        cleared |= (v & 0x1F) << 26;
+    
+        return cleared;
+    }
+    
+    
 
   private:
     bool loaded;
@@ -158,6 +187,8 @@ void Chunk::render(Camera camera) { DrawChunkMesh(camera, mesh, material, chunkP
 //     return bBox;
 // }
 
+// TODO: use a terrain generator 
+
 void Chunk::initialize() {
     for (int x = 0; x < CHUNK_SIZE; x++) {
         for (int y = 0; y < CHUNK_SIZE; y++) {
@@ -166,7 +197,8 @@ void Chunk::initialize() {
                 // NOTE: there seems to be a "pattern" in some chunks - is the same seed be initted across threads?
                 // seems like it does: https://en.cppreference.com/w/cpp/numeric/random/rand
                 blocks[index].isActive = (std::rand() % 2 == 0) ? false : true;
-                blocks[index].blockType = (std::rand() % 2 == 0) ? BlockType::Grass : BlockType::Sand;
+                // make randint 1-7
+                blocks[index].blockType = BlockType((std::rand() % 6) + 1);
                 // blocks[index].isActive = true;
             }
         }
@@ -207,39 +239,49 @@ void Chunk::CreateCube(ChunkMesh *mesh, int blockX, int blockY, int blockZ,
 
     // TODO: casts here?
     // TODO: ignore normals for now
+
+
+    // DEFINES THE 8 POINTS OF THE CUBE
+    // NEED TO CHANGE BLOCKTYPE to x and y coords for map
+
     BlockType blockType = blocks[getIndex(blockX, blockY, blockZ)].blockType;
+    // packvertex(int x, int y, int z, int normal, int tex_x, int tex_y)
+    // set texture coordinates to 0,0 for now, change according to face
     int p1 = Chunk::packVertex(Block::BLOCK_RENDER_SIZE * blockX - hs,
                                Block::BLOCK_RENDER_SIZE * blockY - hs,
                                Block::BLOCK_RENDER_SIZE * blockZ + hs, 1,
-                               blockType);
+                               0, 0);
     int p2 = Chunk::packVertex(Block::BLOCK_RENDER_SIZE * blockX + hs,
                                Block::BLOCK_RENDER_SIZE * blockY - hs,
                                Block::BLOCK_RENDER_SIZE * blockZ + hs, 1,
-                               blockType);
+                               0, 0);
     int p3 = Chunk::packVertex(Block::BLOCK_RENDER_SIZE * blockX + hs,
                                Block::BLOCK_RENDER_SIZE * blockY + hs,
                                Block::BLOCK_RENDER_SIZE * blockZ + hs, 1,
-                               blockType);
+                               0, 0);
     int p4 = Chunk::packVertex(Block::BLOCK_RENDER_SIZE * blockX - hs,
                                Block::BLOCK_RENDER_SIZE * blockY + hs,
                                Block::BLOCK_RENDER_SIZE * blockZ + hs, 1,
-                               blockType);
+                               0, 0);
     int p5 = Chunk::packVertex(Block::BLOCK_RENDER_SIZE * blockX + hs,
                                Block::BLOCK_RENDER_SIZE * blockY - hs,
                                Block::BLOCK_RENDER_SIZE * blockZ - hs, 1,
-                               blockType);
+                               0, 0);
     int p6 = Chunk::packVertex(Block::BLOCK_RENDER_SIZE * blockX - hs,
                                Block::BLOCK_RENDER_SIZE * blockY - hs,
                                Block::BLOCK_RENDER_SIZE * blockZ - hs, 1,
-                               blockType);
+                               0, 0);
     int p7 = Chunk::packVertex(Block::BLOCK_RENDER_SIZE * blockX - hs,
                                Block::BLOCK_RENDER_SIZE * blockY + hs,
                                Block::BLOCK_RENDER_SIZE * blockZ - hs, 1,
-                               blockType);
+                               0, 0);
     int p8 = Chunk::packVertex(Block::BLOCK_RENDER_SIZE * blockX + hs,
                                Block::BLOCK_RENDER_SIZE * blockY + hs,
                                Block::BLOCK_RENDER_SIZE * blockZ - hs, 1,
-                               blockType);
+                               0, 0);
+
+    
+    // CHECKS FOR NEIGHBORING BLOCKS
 
     bool lDefault = false;
     bool lXNegative = lDefault;
@@ -261,33 +303,76 @@ void Chunk::CreateCube(ChunkMesh *mesh, int blockX, int blockY, int blockZ,
     if (blockZ < CHUNK_SIZE - 1)
         lZPositive = blocks[getIndex(blockX, blockY, blockZ + 1)].isActive;
 
-    glm::vec3 n1 = {0.0f, 0.0f, 1.0f};
+
+    // ADD TRIANGLES INTO MESH
+    // prevent segfault if block does not exist
+    if(textureCoordMap.count(blockType) == 0) {
+        std::cerr << "Block type " << blockType << " not found in textureCoordMap." << std::endl;
+        exit(1);
+    }
+
+    std::vector<std::pair<int, int>> textureCoords = textureCoordMap[blockType];
+    // front, back, left, right, top, bottom
+
+    glm::vec3 n1;       // for normal??, not used. 
+    // front face
     if (!lZPositive) {
+        n1 = {0.0f, 0.0f, 1.0f};
+        p1 = updateTexCoords(p1, 0, textureCoords[0].first, textureCoords[0].second + 1);
+        p2 = updateTexCoords(p2, 0, textureCoords[0].first + 1, textureCoords[0].second + 1);
+        p3 = updateTexCoords(p3, 0, textureCoords[0].first + 1, textureCoords[0].second);
+        p4 = updateTexCoords(p4, 0, textureCoords[0].first, textureCoords[0].second);
+        
         AddCubeFace(mesh, p1, p2, p3, p4, vCount, iCount);
     }
 
+    // back face
     if (!lZNegative) {
         n1 = {0.0f, 0.0f, -1.0f};
+        p5 = updateTexCoords(p5, 1, textureCoords[1].first, textureCoords[1].second + 1);
+        p6 = updateTexCoords(p6, 1, textureCoords[1].first + 1, textureCoords[1].second + 1);
+        p7 = updateTexCoords(p7, 1, textureCoords[1].first + 1, textureCoords[1].second);
+        p8 = updateTexCoords(p8, 1, textureCoords[1].first, textureCoords[1].second);
         AddCubeFace(mesh, p5, p6, p7, p8, vCount, iCount);
     }
 
+    // left face
     if (!lXPositive) {
         n1 = {1.0f, 0.0f, 0.0f};
+        p2 = updateTexCoords(p2, 2, textureCoords[2].first, textureCoords[2].second + 1);
+        p5 = updateTexCoords(p5, 2, textureCoords[2].first + 1, textureCoords[2].second + 1);
+        p8 = updateTexCoords(p8, 2, textureCoords[2].first + 1, textureCoords[2].second);
+        p3 = updateTexCoords(p3, 2, textureCoords[2].first, textureCoords[2].second);
         AddCubeFace(mesh, p2, p5, p8, p3, vCount, iCount);
     }
 
+    // right face
     if (!lXNegative) {
         n1 = {-1.0f, 0.0f, 0.0f};
+        p6 = updateTexCoords(p6, 3, textureCoords[3].first, textureCoords[3].second + 1);
+        p1 = updateTexCoords(p1, 3, textureCoords[3].first + 1, textureCoords[3].second + 1);
+        p4 = updateTexCoords(p4, 3, textureCoords[3].first + 1, textureCoords[3].second);
+        p7 = updateTexCoords(p7, 3, textureCoords[3].first, textureCoords[3].second);
         AddCubeFace(mesh, p6, p1, p4, p7, vCount, iCount);
     }
 
+    // top face
     if (!lYPositive) {
         n1 = {0.0f, 1.0f, 0.0f};
+        p4 = updateTexCoords(p4, 4, textureCoords[4].first, textureCoords[4].second);
+        p3 = updateTexCoords(p3, 4, textureCoords[4].first + 1, textureCoords[4].second);
+        p8 = updateTexCoords(p8, 4, textureCoords[4].first + 1, textureCoords[4].second + 1);
+        p7 = updateTexCoords(p7, 4, textureCoords[4].first, textureCoords[4].second + 1);
         AddCubeFace(mesh, p4, p3, p8, p7, vCount, iCount);
     }
 
+    // bottom face
     if (!lYNegative) {
         n1 = {0.0f, -1.0f, 0.0f};
+        p6 = updateTexCoords(p6, 5, textureCoords[5].first, textureCoords[5].second);
+        p5 = updateTexCoords(p5, 5, textureCoords[5].first + 1, textureCoords[5].second);
+        p2 = updateTexCoords(p2, 5, textureCoords[5].first + 1, textureCoords[5].second + 1);
+        p1 = updateTexCoords(p1, 5, textureCoords[5].first, textureCoords[5].second + 1);
         AddCubeFace(mesh, p6, p5, p2, p1, vCount, iCount);
     }
 }
