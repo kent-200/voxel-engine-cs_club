@@ -57,7 +57,7 @@ file(GLOB IMGUI_GLOB
     )
 
 add_library("imgui" STATIC ${IMGUI_GLOB})
-target_include_directories("imgui" PUBLIC ${IMGUI_PATH})
+target_include_directories("imgui" PUBLIC ${IMGUI_PATH} /usr/local/include)
 target_link_libraries("imgui" PRIVATE glfw)
 
 # Add the executable
