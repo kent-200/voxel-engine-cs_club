@@ -18,8 +18,8 @@
 #include "utils.h"
 
 #include "Texture.h"
-#include "terrain/plains.h"
-#include "terrain/hills.h"
+#include "terrain/Plains.h"
+#include "terrain/Hills.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
