@@ -17,7 +17,7 @@
 #include <iostream>
 #include "utils.h"
 
-#include "texture.h"
+#include "Texture.h"
 #include "terrain/plains.h"
 #include "terrain/hills.h"
 
