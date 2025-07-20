@@ -26,6 +26,9 @@ public:
 
                 float height = stb_perlin_noise3_seed(realx, 0.0f, realz, 0, 0, 0, seed);
                 int blockHeight = CHUNK_SIZE - static_cast<int>((height + 1.0f) * amplitude);
+
+                // limit block height to be within chunk bounds
+                blockHeight = std::max(5, std::min(blockHeight, CHUNK_SIZE - 1)); 
                 
 
                 // fill blocks up to the height
