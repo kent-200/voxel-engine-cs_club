@@ -19,7 +19,8 @@ typedef struct VoxelPoint3D {
     int z;
 } VoxelPoint3d;
 
-struct Chunk {
+class Chunk {
+public:
     static constexpr int CHUNK_SIZE = 16;
     static constexpr int CHUNK_SIZE_CUBED =
         CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;

@@ -5,7 +5,8 @@
 
 // Frustum createFrustumFromCamera(Camera camera);
 
-struct Camera {
+class Camera {
+public:
     // TODO: figure out camera following
     // Entity* attachedTo;
     bool isFree = true;

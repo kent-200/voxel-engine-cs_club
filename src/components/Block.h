@@ -32,7 +32,8 @@ std::unordered_map<int, std::vector<std::pair<int, int>>> textureCoordMap = {
 
 
 
-struct Block {
+class Block {
+public:
     static constexpr int BLOCK_RENDER_SIZE = 2;
     // TODO: do we keep this in CPU or in GPU ?
     bool isActive = false;    

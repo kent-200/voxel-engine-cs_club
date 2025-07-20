@@ -5,32 +5,29 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-
-#include <learnopengl/shader_m.h>
-
-#include "Ecs.h"
-#include "PhysicsSystem.h"
 
 #include <iostream>
-#include "utils.h"
+#include <learnopengl/shader_m.h>
 
-#include "Texture.h"
-#include "terrain/Plains.h"
-#include "terrain/Hills.h"
-#include "terrain/Platform.h"
+#include "../components/Ecs.h"
+#include "../components/PhysicsSystem.h"
+
+#include "../components/utils.h"
+
+#include "../components/Texture.h"
+// #include "../terrain/Plains.h"
+// #include "../terrain/Hills.h"
+// #include "../terrain/Platform.h"
+
+#include "../components/ImguiWrapper.h"
+
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void imgui_mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window, bool *cursorOn);
-int calculateFPS(float deltaTime);
-float calculateMemUsage();
-void renderText(Shader &shader, std::string text, float x, float y, float scale,
-                glm::vec3 color);
+// void renderText(Shader &shader, std::string text, float x, float y, float scale, glm::vec3 color);
 
 // timing
 float deltaTime = 0.0f; // time between current frame and last frame
@@ -44,14 +41,10 @@ ChunkManager *chunkManager;
 // Global coordinator
 Coordinator gCoordinator;
 
-const int FPS_HISTORY_CAP = 5000;
-const int MEM_HISTORY_CAP = 5000;
-std::vector<float> fpsHistory;
-std::vector<float> memHistory;
-
-
-
-
+// const int FPS_HISTORY_CAP = 5000;
+// const int MEM_HISTORY_CAP = 5000;
+// std::vector<float> fpsHistory;
+// std::vector<float> memHistory;
 
 
 int main() {
@@ -80,21 +73,9 @@ int main() {
 
     // imgui!!!
     // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO &io = ImGui::GetIO();
-    io.ConfigFlags |=
-        ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |=
-        ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // IF using Docking
-    // Branch
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(
-        window, true); // Second param install_callback=true will install GLFW
-                       // callbacks and chain to existing ones.
-    ImGui_ImplOpenGL3_Init(nullptr);
+    ImguiWrapper imguiWrapper(window);
+    imguiWrapper.init();
+    
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
@@ -145,8 +126,7 @@ int main() {
 	// glFrontFace(GL_CCW);   
 
 
-    char fpsStr[32] = "FPS: 0";
-    char memStr[32];
+    // DEFINE FPS STRING
 
     // define terrain generator
     // -----------------------------
@@ -174,7 +154,7 @@ int main() {
     signature.set(gCoordinator.GetComponentType<Transform>());
     gCoordinator.SetSystemSignature<PhysicsSystem>(signature);
 
-    std::vector<Entity> entities(MAX_ENTITIES);
+     std::vector<Entity> entities(MAX_ENTITIES);
 
     // create a dummy "player entity"
     entities[0] = gCoordinator.CreateEntity();
@@ -204,9 +184,7 @@ int main() {
 
         physicsSystem->Update(deltaTime);
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        imguiWrapper.start_render();
 
         // input
         // -----
@@ -230,127 +208,10 @@ int main() {
         defaultShader->use();
         glUseProgram(0);
 
-        // Calculate  FPS
-        int fps = calculateFPS(deltaTime);
-        float mem = calculateMemUsage();
-        if (fps != -1) {
-            std::sprintf(fpsStr, "FPS: %d", fps);
-        }
-        std::sprintf(memStr, "RAM: %f MB", mem / 1000000);
 
-        ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Always,
-                                ImVec2(0.0f, 0.0f));
-        ImGuiWindowFlags statsFlags =
-            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
-            ImGuiWindowFlags_NoSavedSettings |
-            ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-        statsFlags |= ImGuiWindowFlags_NoMove;
-        bool active = true;
-        ImGui::Begin("Stats", &active, statsFlags);
-        ImGui::Text("%s", fpsStr);
-        ImGui::Text("%s", memStr);
-        ImGui::Separator();
-        // Ends the window
-        ImGui::End();
-
-        ImGui::Begin("Player");
-        ImGui::Text("velocity: (%.2f, %.3f, %.3f)", playerRB.velocity.x,
-                    playerRB.velocity.y, playerRB.velocity.z);
-        ImGui::Text("position: (%.2f, %.3f, %.3f)", playerTrans.position.x,
-                    playerTrans.position.y, playerTrans.position.z);
-        ImGui::End();
-
-        ImGui::Begin("Camera");
-        ImGui::Text("fov: %.2f", gCoordinator.mCamera.fov);
-        ImGui::Text("pos: (%.2f, %.3f, %.3f)", gCoordinator.mCamera.cameraPos.x,
-                    gCoordinator.mCamera.cameraPos.y,
-                    gCoordinator.mCamera.cameraPos.z);
-        ImGui::Text("left: (%.2f, %.3f, %.3f)",
-                    gCoordinator.mCamera.cameraLeft.x,
-                    gCoordinator.mCamera.cameraLeft.y,
-                    gCoordinator.mCamera.cameraLeft.z);
-        ImGui::Text("right: (%.2f, %.3f, %.3f)",
-                    gCoordinator.mCamera.cameraRight.x,
-                    gCoordinator.mCamera.cameraRight.y,
-                    gCoordinator.mCamera.cameraRight.z);
-        ImGui::Text("up: (%.2f, %.3f, %.3f)", gCoordinator.mCamera.cameraUp.x,
-                    gCoordinator.mCamera.cameraUp.y,
-                    gCoordinator.mCamera.cameraUp.z);
-        ImGui::Text("frustum:");
-        ImGui::Text("left d = %.2f",
-                    gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_LEFT]
-                        .distance);
-        ImGui::Text("right d = %.2f",
-                    gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_RIGHT]
-                        .distance);
-        ImGui::Text(
-            "left: n:(%.2f, %.3f, %.3f)\nright: n:(%.3f, %.3f, %.3f)",
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_LEFT].normal.x,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_LEFT].normal.y,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_LEFT].normal.z,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_RIGHT]
-                .normal.x,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_RIGHT]
-                .normal.y,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_RIGHT]
-                .normal.z);
-
-        ImGui::Text(
-            "near: n:(%.2f, %.3f, %.3f)\nfar: n:(%.3f, %.3f, %.3f)",
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_NEAR].normal.x,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_NEAR].normal.y,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_NEAR].normal.z,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_FAR].normal.x,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_FAR].normal.y,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_FAR].normal.z);
-
-        ImGui::Text(
-            "bottom: n:(%.2f, %.3f, %.3f)\ntop: n:(%.3f, %.3f, %.3f)",
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_BOTTOM]
-                .normal.x,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_BOTTOM]
-                .normal.y,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_BOTTOM]
-                .normal.z,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_TOP].normal.x,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_TOP].normal.y,
-            gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_TOP].normal.z);
-        ImGui::End();
-
-        if (cursorOn) {
-            ImGui::Begin("Debug Menu");
-            // if(DEBUG){
-            // 	ImGui::DragInt("tps", &g.ticksPerSecond, 1, 0, 1000);
-            // }
-            // Text that appears in the window
-            ImGui::Checkbox("generate chunks",
-                            &gCoordinator.mChunkManager->genChunk);
-            ImGui::LabelText("##moveSpeedLabel", "Movement Speed");
-            ImGui::SliderFloat("##moveSpeedSlider",
-                               &gCoordinator.mCamera.cameraSpeedMultiplier,
-                               1.0f, 1000.0f);
-            ImGui::LabelText("##chunkGenDistanceLabel", "Chunk Gen Distance");
-            ImGui::SliderInt(
-                "##chunkGenDistanceSlider",
-                (int *)&(gCoordinator.mChunkManager->chunkGenDistance), 1, 16);
-            ImGui::LabelText("##renderDistanceLabel", "Render Distance");
-            ImGui::SliderInt(
-                "##renderDistanceSlider",
-                (int *)&(gCoordinator.mChunkManager->chunkRenderDistance), 1,
-                16);
-            ImGui::LabelText("##zFarLabel", "zFar");
-            ImGui::SliderFloat("##zFarSlider", &gCoordinator.mCamera.zFar, 1.0f,
-                               2000.0f);
-            ImGui::LabelText("##fovSliderLabel", "FOV");
-            ImGui::SliderFloat("##fovSlider", &gCoordinator.mCamera.fov, 25.0f,
-                               105.0f);
-            // Slider that appears in the window
-            // Ends the window
-            ImGui::End();
-        }
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // render ImGui windows
+        imguiWrapper.render(cursorOn, gCoordinator, playerRB, playerTrans, deltaTime);
+        
 
         // Swap buffers and poll IO events
         glfwSwapBuffers(window);
@@ -364,9 +225,7 @@ int main() {
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+    imguiWrapper.~ImguiWrapper();
     glfwTerminate();
     return 0;
 }
@@ -446,30 +305,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-// Function to calculate and return the FPS as a string
-int calculateFPS(float deltaTime) {
-    static int frameCount = 0;
-    static float elapsedTime = 0.0f;
-    static float lastTime = 0.0f;
 
-    elapsedTime += deltaTime;
-    frameCount++;
-
-    if (elapsedTime - lastTime >= 1.0f) { // Update every second
-        lastTime = elapsedTime;
-        int fps = frameCount;
-        frameCount = 0;
-        return fps;
-    }
-
-    return -1.0;
-}
-
-// Function to calculate and return the RAM usage as a string
-float calculateMemUsage() {
-    float memUsage = (float)getMemoryUsage();
-    return memUsage;
-}
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
@@ -536,6 +372,7 @@ void imgui_mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
     glfwGetCursorPos(window, &cursorX, &cursorY);
     ImGui_ImplGlfw_CursorPosCallback(window, cursorX, cursorY);
 }
+
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
