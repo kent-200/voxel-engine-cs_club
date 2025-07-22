@@ -17,8 +17,8 @@ public:
 
     void init();
     void start_render();
-    void render(bool cursorOn, Coordinator & gCoordinator, 
-                RigidBody & playerRB, Transform & playerTrans, float deltaTime);
+    void render(bool cursorOn, Camera & camera,  ChunkManager * chunkManager,
+                 float deltaTime);
 
 private:
     GLFWwindow *window;
@@ -76,8 +76,7 @@ void ImguiWrapper::start_render() {
 
 
 
-void ImguiWrapper::render(bool cursorOn, Coordinator & gCoordinator, RigidBody & playerRB,
-                          Transform & playerTrans, float deltaTime) {
+void ImguiWrapper::render(bool cursorOn, Camera & camera, ChunkManager * chunkManager, float deltaTime) {
      // Calculate  FPS
     int fps = calculateFPS(deltaTime);
     float mem = calculateMemUsage();
@@ -101,68 +100,68 @@ void ImguiWrapper::render(bool cursorOn, Coordinator & gCoordinator, RigidBody &
     // Ends the window
     ImGui::End();
 
-    ImGui::Begin("Player");
-    ImGui::Text("velocity: (%.2f, %.3f, %.3f)", playerRB.velocity.x,
-                playerRB.velocity.y, playerRB.velocity.z);
-    ImGui::Text("position: (%.2f, %.3f, %.3f)", playerTrans.position.x,
-                playerTrans.position.y, playerTrans.position.z);
-    ImGui::End();
+    // ImGui::Begin("Player");
+    // ImGui::Text("velocity: (%.2f, %.3f, %.3f)", playerRB.velocity.x,
+    //             playerRB.velocity.y, playerRB.velocity.z);
+    // ImGui::Text("position: (%.2f, %.3f, %.3f)", playerTrans.position.x,
+    //             playerTrans.position.y, playerTrans.position.z);
+    // ImGui::End();
 
     ImGui::Begin("Camera");
-    ImGui::Text("fov: %.2f", gCoordinator.mCamera.fov);
-    ImGui::Text("pos: (%.2f, %.3f, %.3f)", gCoordinator.mCamera.cameraPos.x,
-                gCoordinator.mCamera.cameraPos.y,
-                gCoordinator.mCamera.cameraPos.z);
+    ImGui::Text("fov: %.2f", camera.fov);
+    ImGui::Text("pos: (%.2f, %.3f, %.3f)", camera.cameraPos.x,
+                camera.cameraPos.y,
+                camera.cameraPos.z);
     ImGui::Text("left: (%.2f, %.3f, %.3f)",
-                gCoordinator.mCamera.cameraLeft.x,
-                gCoordinator.mCamera.cameraLeft.y,
-                gCoordinator.mCamera.cameraLeft.z);
+                camera.cameraLeft.x,
+                camera.cameraLeft.y,
+                camera.cameraLeft.z);
     ImGui::Text("right: (%.2f, %.3f, %.3f)",
-                gCoordinator.mCamera.cameraRight.x,
-                gCoordinator.mCamera.cameraRight.y,
-                gCoordinator.mCamera.cameraRight.z);
-    ImGui::Text("up: (%.2f, %.3f, %.3f)", gCoordinator.mCamera.cameraUp.x,
-                gCoordinator.mCamera.cameraUp.y,
-                gCoordinator.mCamera.cameraUp.z);
+                camera.cameraRight.x,
+                camera.cameraRight.y,
+                camera.cameraRight.z);
+    ImGui::Text("up: (%.2f, %.3f, %.3f)", camera.cameraUp.x,
+                camera.cameraUp.y,
+                camera.cameraUp.z);
     ImGui::Text("frustum:");
     ImGui::Text("left d = %.2f",
-                gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_LEFT]
+                camera.frustum.planes[Frustum::FRUSTUM_LEFT]
                     .distance);
     ImGui::Text("right d = %.2f",
-                gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_RIGHT]
+                camera.frustum.planes[Frustum::FRUSTUM_RIGHT]
                     .distance);
     ImGui::Text(
         "left: n:(%.2f, %.3f, %.3f)\nright: n:(%.3f, %.3f, %.3f)",
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_LEFT].normal.x,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_LEFT].normal.y,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_LEFT].normal.z,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_RIGHT]
+        camera.frustum.planes[Frustum::FRUSTUM_LEFT].normal.x,
+        camera.frustum.planes[Frustum::FRUSTUM_LEFT].normal.y,
+        camera.frustum.planes[Frustum::FRUSTUM_LEFT].normal.z,
+        camera.frustum.planes[Frustum::FRUSTUM_RIGHT]
             .normal.x,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_RIGHT]
+        camera.frustum.planes[Frustum::FRUSTUM_RIGHT]
             .normal.y,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_RIGHT]
+        camera.frustum.planes[Frustum::FRUSTUM_RIGHT]
             .normal.z);
 
     ImGui::Text(
         "near: n:(%.2f, %.3f, %.3f)\nfar: n:(%.3f, %.3f, %.3f)",
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_NEAR].normal.x,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_NEAR].normal.y,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_NEAR].normal.z,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_FAR].normal.x,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_FAR].normal.y,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_FAR].normal.z);
+        camera.frustum.planes[Frustum::FRUSTUM_NEAR].normal.x,
+        camera.frustum.planes[Frustum::FRUSTUM_NEAR].normal.y,
+        camera.frustum.planes[Frustum::FRUSTUM_NEAR].normal.z,
+        camera.frustum.planes[Frustum::FRUSTUM_FAR].normal.x,
+        camera.frustum.planes[Frustum::FRUSTUM_FAR].normal.y,
+        camera.frustum.planes[Frustum::FRUSTUM_FAR].normal.z);
 
     ImGui::Text(
         "bottom: n:(%.2f, %.3f, %.3f)\ntop: n:(%.3f, %.3f, %.3f)",
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_BOTTOM]
+        camera.frustum.planes[Frustum::FRUSTUM_BOTTOM]
             .normal.x,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_BOTTOM]
+        camera.frustum.planes[Frustum::FRUSTUM_BOTTOM]
             .normal.y,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_BOTTOM]
+        camera.frustum.planes[Frustum::FRUSTUM_BOTTOM]
             .normal.z,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_TOP].normal.x,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_TOP].normal.y,
-        gCoordinator.mCamera.frustum.planes[Frustum::FRUSTUM_TOP].normal.z);
+        camera.frustum.planes[Frustum::FRUSTUM_TOP].normal.x,
+        camera.frustum.planes[Frustum::FRUSTUM_TOP].normal.y,
+        camera.frustum.planes[Frustum::FRUSTUM_TOP].normal.z);
     ImGui::End();
 
     if (cursorOn) {
@@ -172,25 +171,25 @@ void ImguiWrapper::render(bool cursorOn, Coordinator & gCoordinator, RigidBody &
         // }
         // Text that appears in the window
         ImGui::Checkbox("generate chunks",
-                        &gCoordinator.mChunkManager->genChunk);
+                        &chunkManager->genChunk);
         ImGui::LabelText("##moveSpeedLabel", "Movement Speed");
         ImGui::SliderFloat("##moveSpeedSlider",
-                            &gCoordinator.mCamera.cameraSpeedMultiplier,
+                            &camera.cameraSpeedMultiplier,
                             1.0f, 1000.0f);
         ImGui::LabelText("##chunkGenDistanceLabel", "Chunk Gen Distance");
         ImGui::SliderInt(
             "##chunkGenDistanceSlider",
-            (int *)&(gCoordinator.mChunkManager->chunkGenDistance), 1, 16);
+            (int *)&(chunkManager->chunkGenDistance), 1, 16);
         ImGui::LabelText("##renderDistanceLabel", "Render Distance");
         ImGui::SliderInt(
             "##renderDistanceSlider",
-            (int *)&(gCoordinator.mChunkManager->chunkRenderDistance), 1,
+            (int *)&(chunkManager->chunkRenderDistance), 1,
             16);
         ImGui::LabelText("##zFarLabel", "zFar");
-        ImGui::SliderFloat("##zFarSlider", &gCoordinator.mCamera.zFar, 1.0f,
+        ImGui::SliderFloat("##zFarSlider", &camera.zFar, 1.0f,
                             2000.0f);
         ImGui::LabelText("##fovSliderLabel", "FOV");
-        ImGui::SliderFloat("##fovSlider", &gCoordinator.mCamera.fov, 25.0f,
+        ImGui::SliderFloat("##fovSlider", &camera.fov, 25.0f,
                             105.0f);
         // Slider that appears in the window
         // Ends the window

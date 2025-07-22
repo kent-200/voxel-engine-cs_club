@@ -25,6 +25,7 @@ struct Texture {
 
     void loadTexture();
     void bindTexture(unsigned int unit);
+    void setShaderVariables(Shader &shader, unsigned int unit);
 
     ~Texture();
 };
@@ -73,6 +74,14 @@ void Texture::bindTexture(unsigned int unit = 0) {
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, id);
 }
+
+void Texture::setShaderVariables(Shader &shader, unsigned int unit) {
+    shader.use();
+    shader.setInt("texture1", unit); // set texture1 (variable in shader) in shader to binded texture #0
+    shader.setFloat("texWidth", (1.0f / (float)atlasCols));
+    shader.setFloat("texHeight", (1.0f / (float)atlasRows));
+}
+
 
 Texture::~Texture() {
     glDeleteTextures(1, &id);

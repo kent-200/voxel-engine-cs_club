@@ -4,7 +4,7 @@
 #include <iostream>
 
 
-#include "../TerrainGenerator.h"
+#include "../components/TerrainGenerator.h"
 
 
 
