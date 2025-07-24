@@ -73,7 +73,8 @@ struct ChunkManager {
     std::shared_ptr<std::mutex> visibilityMutex;
     ChunkManager();
     ChunkManager(unsigned int _chunkGenDistance,
-                 unsigned int _chunkRenderDistance, Shader *_terrainShader);
+                 unsigned int _chunkRenderDistance, Shader *_terrainShader, 
+                TerrainGenerator * terrainGenerator);
     ~ChunkManager();
     void update(float dt, Camera newCamera);
     void updateAsyncChunker(Camera newCamera);
@@ -109,20 +110,24 @@ struct ChunkManager {
 
     unsigned int chunkGenDistance;
     unsigned int chunkRenderDistance;
+    TerrainGenerator *terrainGenerator = nullptr;
 };
 ChunkManager::ChunkManager() {
     chunkMutex = std::make_shared<std::mutex>();
     visibilityMutex = std::make_shared<std::mutex>();
+    terrainGenerator = new TerrainGenerator(Chunk::CHUNK_SIZE, 0);
 }
 
 ChunkManager::ChunkManager(unsigned int _chunkGenDistance,
                            unsigned int _chunkRenderDistance,
-                           Shader *_terrainShader) {
+                           Shader *_terrainShader, 
+                           TerrainGenerator *terrainGenerator) {
     chunkGenDistance = _chunkGenDistance;
     chunkRenderDistance = _chunkRenderDistance;
     terrainShader = _terrainShader;
     genChunk = true;
     bool forceVisibilityupdate = true;
+    this->terrainGenerator = terrainGenerator;
 
     chunkMutex = std::make_shared<std::mutex>();
     visibilityMutex = std::make_shared<std::mutex>();
@@ -352,7 +357,7 @@ void ChunkManager::updateSetupList() { // Setup any chunks that have not
          ++iterator) {
         Chunk *pChunk = (*iterator);
         if (pChunk->isLoaded() && pChunk->isSetup() == false) {
-            pChunk->setup();
+            pChunk->setup(terrainGenerator);
             if (pChunk->isSetup()) { // Only force the visibility update if we
                                      // actually setup the chunk, some chunks
                                      // wait in the pre-setup stage...

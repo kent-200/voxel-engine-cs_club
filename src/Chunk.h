@@ -2,6 +2,7 @@
 #define CHUNK_H
 #include "Block.h"
 #include "ChunkMesh.h"
+#include "TerrainGenerator.h"
 #include <glm/glm.hpp>
 #include <learnopengl/shader_m.h>
 
@@ -24,7 +25,7 @@ struct Chunk {
         CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
     static bool debugMode;
 
-    Block blocks[CHUNK_SIZE_CUBED];
+    Block blocks[CHUNK_SIZE_CUBED] = {Block()};
     ChunkMesh mesh;
     // ChunkModel model;
     glm::vec3 chunkPosition; // minimum corner of the chunk
@@ -37,10 +38,10 @@ struct Chunk {
     void load();
     void unload();
     void rebuildMesh();
-    void setup();
+    void setup(TerrainGenerator *generator);
     void render(Camera camera);
     // BoundingBox getBoundingBox();
-    void initialize();
+    void initialize(TerrainGenerator *generator);
     void AddCubeFace(ChunkMesh *mesh, int p1, int p2, int p3, int p4,
                      int *vCount, int *iCount);
     void CreateCube(ChunkMesh *mesh, int blockX, int blockY, int blockZ,
@@ -169,8 +170,8 @@ void Chunk::rebuildMesh() {
     createMesh();
 }
 
-void Chunk::setup() {
-    initialize();
+void Chunk::setup(TerrainGenerator *generator) {
+    initialize(generator);
     createMesh();
     hasSetup = true;
 }
@@ -189,20 +190,16 @@ void Chunk::render(Camera camera) { DrawChunkMesh(camera, mesh, material, chunkP
 
 // TODO: use a terrain generator 
 
-void Chunk::initialize() {
-    for (int x = 0; x < CHUNK_SIZE; x++) {
-        for (int y = 0; y < CHUNK_SIZE; y++) {
-            for (int z = 0; z < CHUNK_SIZE; z++) {
-                int index = getIndex(x, y, z);
-                // NOTE: there seems to be a "pattern" in some chunks - is the same seed be initted across threads?
-                // seems like it does: https://en.cppreference.com/w/cpp/numeric/random/rand
-                blocks[index].isActive = (std::rand() % 2 == 0) ? false : true;
-                // make randint 1-7
-                blocks[index].blockType = BlockType((std::rand() % 6) + 1);
-                // blocks[index].isActive = true;
-            }
-        }
-    }
+void Chunk::initialize(TerrainGenerator *generator) {
+    // normalise chunk position from real world position to 
+    // index in grid position for perlin noise based generation
+
+    // divide by block render size
+    generator->generateChunk(glm::vec3{
+        chunkPosition.x / Block::BLOCK_RENDER_SIZE,
+        chunkPosition.y / Block::BLOCK_RENDER_SIZE,
+        chunkPosition.z / Block::BLOCK_RENDER_SIZE
+    }, blocks);
 }
 
 // void deactivateBlock(Vector2 coords) {

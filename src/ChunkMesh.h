@@ -26,6 +26,7 @@ Material::Material() {}
 Material::Material(Shader* _shader) { shader = _shader; }
 
 struct ChunkMesh {
+    static constexpr bool DEBUG_TRIANGLES = false; // Display green triangles on blocks
     static constexpr int MESH_VERTEX_BUFFERS = 2;
     int vertexCount;   // Number of vertices stored in arrays
     int triangleCount; // Number of triangles stored (indexed or not)
@@ -148,19 +149,23 @@ void DrawChunkMesh(Camera camera, ChunkMesh mesh, Material material, glm::vec3 p
     material.shader->setVec3("worldPos", position);
     // Draw mesh
     if (mesh.indices != NULL) {
-        material.shader->setBool("useInColor", true);
-        material.shader->setVec3("inColor", {0.5f, 1.0f, 0.5f});
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        smolDrawVertexArrayElements(0, mesh.triangleCount * 3, 0);
+        if(mesh.DEBUG_TRIANGLES){
+            material.shader->setBool("useInColor", true);
+            material.shader->setVec3("inColor", {0.5f, 1.0f, 0.5f});
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            smolDrawVertexArrayElements(0, mesh.triangleCount * 3, 0);
+        }
         material.shader->setBool("useInColor", false);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         smolDrawVertexArrayElements(0, mesh.triangleCount * 3, 0);
     }
     else {
-        material.shader->setBool("useInColor", true);
-        material.shader->setVec3("inColor", {0.5f, 1.0f, 0.5f});
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        smolDrawVertexArray(0, mesh.triangleCount * 3);
+        if(mesh.DEBUG_TRIANGLES){
+            material.shader->setBool("useInColor", true);
+            material.shader->setVec3("inColor", {0.5f, 1.0f, 0.5f});
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            smolDrawVertexArray(0, mesh.triangleCount * 3);
+        }
         // material.shader->setVec3("inColor", {0.0f, 0.5f, 0.0f});
         material.shader->setBool("useInColor", false);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

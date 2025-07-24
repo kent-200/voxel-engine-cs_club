@@ -35,9 +35,10 @@ std::unordered_map<int, std::vector<std::pair<int, int>>> textureCoordMap = {
 struct Block {
     static constexpr int BLOCK_RENDER_SIZE = 2;
     // TODO: do we keep this in CPU or in GPU ?
-    bool isActive;    Block(){};
+    bool isActive = false;    
+    Block(){};
     ~Block(){};
-    BlockType blockType;
+    BlockType blockType =  BlockType::Default;
 };
 
 #endif // BLOCK_H

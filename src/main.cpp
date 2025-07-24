@@ -17,7 +17,10 @@
 #include <iostream>
 #include "utils.h"
 
-#include "texture.h"
+#include "Texture.h"
+#include "terrain/Plains.h"
+#include "terrain/Hills.h"
+#include "terrain/Platform.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
@@ -145,8 +148,15 @@ int main() {
     char fpsStr[32] = "FPS: 0";
     char memStr[32];
 
+    // define terrain generator
+    // -----------------------------
+    TerrainGenerator *terrainGenerator = new TerrainGenerator(Chunk::CHUNK_SIZE, 0);
+
+    // Use custom terrain generator
+    // TerrainGenerator * terrainGenerator = new HillsTerrainGenerator(Chunk::CHUNK_SIZE, 1337);
+
     // initialize coordinator
-    chunkManager = new ChunkManager(4, 3, ourShader);
+    chunkManager = new ChunkManager(4, 3, ourShader, terrainGenerator);
     gCoordinator.Init(chunkManager);
 
     // generate terrain
