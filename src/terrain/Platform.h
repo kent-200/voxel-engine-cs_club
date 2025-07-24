@@ -16,7 +16,7 @@ public:
     void generateChunk(glm::vec3 position, Block * blocks){
         int y = 0;
         int size_limit = 16;
-        if(position.x > size_limit| position.x < -size_limit| position.z > size_limit || position.z < -size_limit){
+        if(position.x > size_limit || position.x < -size_limit || position.z > size_limit || position.z < -size_limit){
             return;
         }
         for(int x = 0; x < CHUNK_SIZE; x++) {
