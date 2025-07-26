@@ -1,9 +1,10 @@
 #version 330 core
-out vec4 FragColor;
+in vec3 outcol;
+in float shadow;
 
-in vec4 ourColor;
+out vec4 finalColor;
 
-void main()
-{
-    FragColor = ourColor;
+
+void main() {
+    finalColor = vec4(outcol * shadow, 1.0f);
 }

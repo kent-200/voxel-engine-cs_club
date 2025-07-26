@@ -212,6 +212,7 @@ void Chunk::AddCubeFace(ChunkMesh *mesh, int p1, int p2, int p3, int p4,
     int v2 = *vCount + 1;
     int v3 = *vCount + 2;
     int v4 = *vCount + 3;
+    
 
     // Add vertices
     mesh->vertices[v1] = p1;

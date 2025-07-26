@@ -17,7 +17,7 @@ public:
 
     void init();
     void start_render();
-    void render(bool cursorOn, Camera & camera,  ChunkManager * chunkManager,
+    void render(bool cursorOn, Camera & camera,
                  float deltaTime);
 
 private:
@@ -76,7 +76,7 @@ void ImguiWrapper::start_render() {
 
 
 
-void ImguiWrapper::render(bool cursorOn, Camera & camera, ChunkManager * chunkManager, float deltaTime) {
+void ImguiWrapper::render(bool cursorOn, Camera & camera, float deltaTime) {
      // Calculate  FPS
     int fps = calculateFPS(deltaTime);
     float mem = calculateMemUsage();
@@ -163,38 +163,6 @@ void ImguiWrapper::render(bool cursorOn, Camera & camera, ChunkManager * chunkMa
         camera.frustum.planes[Frustum::FRUSTUM_TOP].normal.y,
         camera.frustum.planes[Frustum::FRUSTUM_TOP].normal.z);
     ImGui::End();
-
-    if (cursorOn) {
-        ImGui::Begin("Debug Menu");
-        // if(DEBUG){
-        // 	ImGui::DragInt("tps", &g.ticksPerSecond, 1, 0, 1000);
-        // }
-        // Text that appears in the window
-        ImGui::Checkbox("generate chunks",
-                        &chunkManager->genChunk);
-        ImGui::LabelText("##moveSpeedLabel", "Movement Speed");
-        ImGui::SliderFloat("##moveSpeedSlider",
-                            &camera.cameraSpeedMultiplier,
-                            1.0f, 1000.0f);
-        ImGui::LabelText("##chunkGenDistanceLabel", "Chunk Gen Distance");
-        ImGui::SliderInt(
-            "##chunkGenDistanceSlider",
-            (int *)&(chunkManager->chunkGenDistance), 1, 16);
-        ImGui::LabelText("##renderDistanceLabel", "Render Distance");
-        ImGui::SliderInt(
-            "##renderDistanceSlider",
-            (int *)&(chunkManager->chunkRenderDistance), 1,
-            16);
-        ImGui::LabelText("##zFarLabel", "zFar");
-        ImGui::SliderFloat("##zFarSlider", &camera.zFar, 1.0f,
-                            2000.0f);
-        ImGui::LabelText("##fovSliderLabel", "FOV");
-        ImGui::SliderFloat("##fovSlider", &camera.fov, 25.0f,
-                            105.0f);
-        // Slider that appears in the window
-        // Ends the window
-        ImGui::End();
-    }
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
