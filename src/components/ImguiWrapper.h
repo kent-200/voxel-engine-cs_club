@@ -5,7 +5,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#include "util.h"       // getMemoryUsage
+#include "utils.h"       // getMemoryUsage
 #include "Ecs.h"        // Coordinator
 
 
@@ -30,7 +30,7 @@ private:
     float lastTime = 0.0f;
 
     int calculateFPS(float deltaTime);
-    float calculateMemUsage();
+
 
 
 };
@@ -79,7 +79,7 @@ void ImguiWrapper::start_render() {
 void ImguiWrapper::render(bool cursorOn, Camera & camera, float deltaTime) {
      // Calculate  FPS
     int fps = calculateFPS(deltaTime);
-    float mem = calculateMemUsage();
+    int mem = 0;
     if (fps != -1) {
         std::sprintf(fpsStr, "FPS: %d", fps);
     }
@@ -188,10 +188,7 @@ int ImguiWrapper::calculateFPS(float deltaTime) {
 }
 
 // Function to calculate and return the RAM usage as a string
-float ImguiWrapper::calculateMemUsage() {
-    float memUsage = (float)getMemoryUsage();
-    return memUsage;
-}
+
 
 
 #endif

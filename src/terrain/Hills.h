@@ -28,7 +28,7 @@ public:
                 int blockHeight = CHUNK_SIZE - static_cast<int>((height + 1.0f) * amplitude);
 
                 // limit block height to be within chunk bounds
-                blockHeight = std::max(5, std::min(blockHeight, CHUNK_SIZE - 1)); 
+                blockHeight = (std::max)(5, (std::min)(blockHeight, CHUNK_SIZE - 1)); 
                 
 
                 // fill blocks up to the height
